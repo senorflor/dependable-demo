@@ -1,41 +1,93 @@
 #!/usr/bin/env node
-const { askAndWeShallFind } = require('./contrivedFileStuff')
-const { inspireUs } = require('./messages')
-const { ask } = require('./clio')
-
-
-const dispatchTable = [
-  // We use an array to preserve ordering without screwing around with a bunch of Map iterators.
-  ["Find a file containing a certain string", askAndWeShallFind],
-  ["Print an inspirational message", inspireUs],
-  // Keep this as the last item; introducing as much entropy as possible in a small codebase :)
-  ["Surprise me!", surpriseMe]
-]
-
-async function surpriseMe() {
-  // pick any item from dispatch table except for the last one randomly
-  const index = Math.floor(Math.random() * (dispatchTable.length - 1))
-  const result = await dispatchTable[index][1]()
-  return result
+const imports = {
+  askAndWeShallFind: require('./files').askAndWeShallFind,
+  inspireUs: require('./messages').inspireUs,
+  ask: require('./clio').ask,
+  print: console.log,
+  rand: Math.random,
 }
 
-async function main() {
-  console.log("Welcome to a very effectful program!")
-  // Provide options (including random chooser)
-  dispatchTable.forEach(([description, _], index) => {
-    console.log(`${index}. ${description}`)
-  })
-  const choice = await ask(`Pick an option between 0 and ${dispatchTable.length - 1}`)
-  const index = parseInt(choice)
-  if (!isNaN(index) && index >= 0 && index < dispatchTable.length) {
-    const result = await dispatchTable[index][1]()
-    console.log(`result: ${result}`)
-  } else {
-    console.log('That was not a valid choice. For shame.')
-  }
+const privates = {
+  // NOTE: in this first iteration I declared everything on objects for easily introspectable
+  //  namespaces for imports, privates, and (via the normal module var) exports, which led of course
+  //  to issues with cross-property references. Used getters for easy reference between `privates`
+  //  data and methods, But may end up constructing vars in future iterations in a block scope in
+  //  top level then setting on object to avoid dealing with cross-property reference issues.
+  get messages() {
+    return [
+      'I love deadlines. I love the whooshing noise they make as they go by.',
+      'My other car is a cdr',
+      'The face of a child can say it all, especially the mouth part of the face.',
+    ]
+  },
+  get dispatchTable() {
+    // Let's use an array to preserve ordering without messing around with verbose Map iterators.
+    return [
+      {
+        description: "Find a file containing a certain string",
+        fn: imports.askAndWeShallFind
+      },
+      {
+        description: "Print an inspirational message",
+        fn: imports.inspireUs
+      },
+      // Keep this as the last item because it gets special treatment elsewhere:
+      {
+        description: "Surprise me!",
+        fn: this.surpriseMe
+      },
+    ]
+  },
+  surpriseMe: async function(
+    { rand } = imports,
+    { dispatchTable } = privates
+  ) {
+    // pick any item from dispatch table except for the last one randomly
+    const index = Math.floor(rand() * (dispatchTable.length - 1))
+    const result = await dispatchTable[index].fn()
+    return result
+  },
 }
 
+module.exports = {
+  main: async function(
+    { print, ask } = imports,
+    { dispatchTable } = privates
+  ) {
+    print("Welcome to a very effectful program!")
+    // Provide options
+    dispatchTable.forEach(({ description }, index) => {
+      print(`${index}. ${description}`)
+    })
 
+    // Get user's choice
+    const choice = await ask(`Pick an option between 0 and ${dispatchTable.length - 1}`)
+    const index = parseInt(choice)
+
+    // Run chosen function
+    if (!isNaN(index) && index >= 0 && index < dispatchTable.length) {
+      try {
+        const result = await dispatchTable[index].fn()
+        print(`result: ${result}`)
+      } catch (e) {
+        print(`There was an error processing your request: ${e.message}`)
+      }
+    } else {
+      print('That was not a valid choice. For shame.')
+    }
+  },
+}
+
+// Tired of module privacy being complected with need to test? Let's make them orthogonal!
+if (process.env.TESTING) {
+    module.exports = {
+        ...module.exports,
+        imports,
+        privates,
+    }
+}
+
+// If this script is our entry point, run main function
 if (require.main === module) {
-  main()
+  module.exports.main()
 }
