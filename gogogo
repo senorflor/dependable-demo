@@ -1,0 +1,41 @@
+#!/usr/bin/env node
+const { askAndWeShallFind } = require('./contrivedFileStuff')
+const { inspireUs } = require('./messages')
+const { ask } = require('./clio')
+
+
+const dispatchTable = [
+  // We use an array to preserve ordering without screwing around with a bunch of Map iterators.
+  ["Find a file containing a certain string", askAndWeShallFind],
+  ["Print an inspirational message", inspireUs],
+  // Keep this as the last item; introducing as much entropy as possible in a small codebase :)
+  ["Surprise me!", surpriseMe]
+]
+
+async function surpriseMe() {
+  // pick any item from dispatch table except for the last one randomly
+  const index = Math.floor(Math.random() * (dispatchTable.length - 1))
+  const result = await dispatchTable[index][1]()
+  return result
+}
+
+async function main() {
+  console.log("Welcome to a very effectful program!")
+  // Provide options (including random chooser)
+  dispatchTable.forEach(([description, _], index) => {
+    console.log(`${index}. ${description}`)
+  })
+  const choice = await ask(`Pick an option between 0 and ${dispatchTable.length - 1}`)
+  const index = parseInt(choice)
+  if (!isNaN(index) && index >= 0 && index < dispatchTable.length) {
+    const result = await dispatchTable[index][1]()
+    console.log(`result: ${result}`)
+  } else {
+    console.log('That was not a valid choice. For shame.')
+  }
+}
+
+
+if (require.main === module) {
+  main()
+}
