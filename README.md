@@ -7,6 +7,11 @@ An experiment with
 
 in a relatively functional JS project that does a lot of stateful stuff.
 
+## prerequisites and instructions
+
+- install node (haven't tested for version requirements or non-Darwin compatibility)
+- ./gogogo (it has a node shebang)
+
 ## goals
 
 To feel free to do some unusual and possibly ugly stuff for a while to seek out:
