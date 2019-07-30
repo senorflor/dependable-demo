@@ -34,7 +34,7 @@ To feel free to do some unusual and possibly ugly stuff for a while to seek out:
 ## branches
 
 - `original`: quickly hacked together CLI codebase that has randomness, input, and output (oh my!)
-- `experiment-1`: a first apprach: scope (and even define/code!) everything under
+- `experiment-1`: a first approach: scope (and even define/code!) everything under
     - `imports`: an object containing all non-core imported functionality and stateful functions
     - `privates`: an object containing all private data and functions (wanted insertability and
       testability)
