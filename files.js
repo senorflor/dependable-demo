@@ -1,6 +1,6 @@
   // NOTE: this is a bit goofy; is there a better way for multiple and more complex/processed imports?
 const imports = {
-  ...({ existsSync, readdirSync} = require('fs')),
+  readdirSync: require('fs').readdirSync,
   join: require('path').join, // we consider this stateful because of OS dependent behavior
   ask: require('./clio').ask,
 }
